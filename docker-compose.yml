@@ -1,0 +1,49 @@
+version: '3'
+services:
+  db:
+    image: postgres
+    restart: always
+    networks:
+      - django_network
+    environment:
+      # - POSTGRES_USER:"postgres"
+      POSTGRES_PASSWORD: password
+      # - POSTGRES_HOST_AUTH_METHOD=trust
+      # POSTGRES_USER: postgres
+      # POSTGRES_PASSWORD: postgres
+    
+
+  django_gunicorn:
+    volumes:
+      - static:/static
+      - ./django_project:/app
+    env_file:
+      - .env
+    build:
+      context: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    networks:
+      - django_network
+      # traefik_default    
+
+  nginx:
+    build: ./nginx
+    volumes:
+      - static:/static
+    ports:
+      - "80:80"
+    networks:
+      - django_network
+    depends_on:
+      - django_gunicorn
+volumes:
+  static:
+  # postgres_data:
+  
+networks:
+  django_network:
+#     external: true
+    driver: bridge
